@@ -9,6 +9,231 @@ import {
 } from "../services/api";
 import { useState, useEffect, useRef } from "react";
 
+const BellIcon = ({
+  notifications,
+  unreadCount,
+  showNotifications,
+  setShowNotifications,
+  handleMarkAsRead,
+  handleMarkAllAsRead,
+  notifRef,
+}) => (
+  <div ref={notifRef} style={{ position: "relative" }}>
+    <button
+      onClick={() => {
+        console.log("Bell clicked, showNotifications:", showNotifications);
+        setShowNotifications(!showNotifications);
+      }}
+      style={{
+        background: showNotifications
+          ? "rgba(108,61,211,0.3)"
+          : "rgba(255,255,255,0.08)",
+        border: "1px solid rgba(255,255,255,0.15)",
+        borderRadius: "50%",
+        color: "#fff",
+        width: "36px",
+        height: "36px",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "1rem",
+        position: "relative",
+        transition: "all 0.2s",
+      }}
+    >
+      🔔
+      {unreadCount > 0 && (
+        <span
+          style={{
+            position: "absolute",
+            top: "-4px",
+            right: "-4px",
+            background: "#f43f8e",
+            borderRadius: "50%",
+            width: "18px",
+            height: "18px",
+            fontSize: "0.65rem",
+            fontWeight: "700",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "2px solid #060818",
+          }}
+        >
+          {unreadCount > 9 ? "9+" : unreadCount}
+        </span>
+      )}
+    </button>
+
+    {showNotifications && (
+      <div
+        style={{
+          position: "absolute",
+          top: "44px",
+          right: 0,
+          width: "320px",
+          background: "rgba(10,6,28,0.97)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: "16px",
+          boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
+          backdropFilter: "blur(20px)",
+          zIndex: 300,
+          overflow: "hidden",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            padding: "1rem 1.2rem",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "Syne, sans-serif",
+              fontWeight: "700",
+              fontSize: "0.95rem",
+            }}
+          >
+            Notifications
+            {unreadCount > 0 && (
+              <span
+                style={{
+                  marginLeft: "0.5rem",
+                  background: "rgba(244,63,142,0.2)",
+                  border: "1px solid rgba(244,63,142,0.3)",
+                  borderRadius: "50px",
+                  padding: "0.1rem 0.45rem",
+                  fontSize: "0.7rem",
+                  color: "#f43f8e",
+                }}
+              >
+                {unreadCount} new
+              </span>
+            )}
+          </p>
+          {unreadCount > 0 && (
+            <button
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                console.log("Mark all read clicked");
+                handleMarkAllAsRead();
+              }}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#a78bfa",
+                fontSize: "0.75rem",
+                cursor: "pointer",
+                fontWeight: "600",
+              }}
+            >
+              Mark all read
+            </button>
+          )}
+        </div>
+
+        {/* Notifications List */}
+        <div style={{ maxHeight: "360px", overflowY: "auto" }}>
+          {notifications.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "2.5rem 1rem" }}>
+              <p style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🔔</p>
+              <p className="text-secondary" style={{ fontSize: "0.85rem" }}>
+                No notifications yet
+              </p>
+            </div>
+          ) : (
+            notifications.map((notif) => (
+              <div
+                key={notif._id}
+                onMouseDown={(e) => {
+                  if (!notif.isRead) {
+                    e.stopPropagation();
+                    console.log("Notification clicked:", notif._id);
+                    handleMarkAsRead(notif._id);
+                  }
+                }}
+                style={{
+                  padding: "0.85rem 1.2rem",
+                  borderBottom: "1px solid rgba(255,255,255,0.05)",
+                  background: notif.isRead
+                    ? "transparent"
+                    : "rgba(108,61,211,0.08)",
+                  cursor: notif.isRead ? "default" : "pointer",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "0.75rem",
+                  transition: "background 0.2s",
+                }}
+              >
+                <div
+                  style={{
+                    width: "34px",
+                    height: "34px",
+                    borderRadius: "50%",
+                    background: notif.isRead
+                      ? "rgba(255,255,255,0.05)"
+                      : "rgba(108,61,211,0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.9rem",
+                    flexShrink: 0,
+                  }}
+                >
+                  🎵
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p
+                    style={{
+                      fontSize: "0.82rem",
+                      fontWeight: notif.isRead ? "400" : "600",
+                      color: notif.isRead ? "var(--text-muted)" : "#fff",
+                      lineHeight: 1.4,
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    {notif.message}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "0.72rem",
+                      color: "var(--text-muted)",
+                    }}
+                  >
+                    {new Date(notif.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                {!notif.isRead && (
+                  <div
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      background: "#6c3dd3",
+                      flexShrink: 0,
+                      marginTop: "4px",
+                    }}
+                  />
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+);
+
 const Navbar = () => {
   const { user, logout } = useAuth();
   const { stopPlayer } = usePlayer();
@@ -20,20 +245,23 @@ const Navbar = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef(null);
+  const notifRefMobile = useRef(null);
 
   useEffect(() => {
     if (user?.role === "user") {
       fetchNotifications();
-      // Poll every 30 seconds for new notifications
       const interval = setInterval(fetchNotifications, 30000);
       return () => clearInterval(interval);
     }
   }, [user]);
 
-  // Close notification dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
+      const clickedOutsideDesktop =
+        notifRef.current && !notifRef.current.contains(e.target);
+      const clickedOutsideMobile =
+        notifRefMobile.current && !notifRefMobile.current.contains(e.target);
+      if (clickedOutsideDesktop && clickedOutsideMobile) {
         setShowNotifications(false);
       }
     };
@@ -43,33 +271,37 @@ const Navbar = () => {
 
   const fetchNotifications = async () => {
     try {
+      console.log("fetchNotifications called");
       const { data } = await getNotifications();
+      console.log("fetchNotifications response:", data);
       setNotifications(data.notifications);
       setUnreadCount(data.unreadCount);
     } catch (error) {
-      console.error(error);
+      console.error("ERROR in fetchNotifications:", error);
     }
   };
 
   const handleMarkAsRead = async (id) => {
     try {
+      console.log("handleMarkAsRead called for id:", id);
       await markNotificationAsRead(id);
-      setNotifications(
-        notifications.map((n) => (n._id === id ? { ...n, isRead: true } : n))
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      await fetchNotifications();
     } catch (error) {
-      console.error(error);
+      console.error("ERROR in handleMarkAsRead:", error);
     }
   };
 
   const handleMarkAllAsRead = async () => {
     try {
-      await markAllNotificationsAsRead();
-      setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
-      setUnreadCount(0);
+      console.log("1. handleMarkAllAsRead called");
+      const response = await markAllNotificationsAsRead();
+      console.log("2. API response:", response);
+      await fetchNotifications();
+      console.log("3. Notifications refetched");
     } catch (error) {
-      console.error(error);
+      console.error("ERROR in handleMarkAllAsRead:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
     }
   };
 
@@ -99,215 +331,14 @@ const Navbar = () => {
     transition: "all 0.2s",
   });
 
-  const BellIcon = () => (
-    <div ref={notifRef} style={{ position: "relative" }}>
-      <button
-        onClick={() => setShowNotifications(!showNotifications)}
-        style={{
-          background: showNotifications
-            ? "rgba(108,61,211,0.3)"
-            : "rgba(255,255,255,0.08)",
-          border: "1px solid rgba(255,255,255,0.15)",
-          borderRadius: "50%",
-          color: "#fff",
-          width: "36px",
-          height: "36px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "1rem",
-          position: "relative",
-          transition: "all 0.2s",
-        }}
-      >
-        🔔
-        {unreadCount > 0 && (
-          <span
-            style={{
-              position: "absolute",
-              top: "-4px",
-              right: "-4px",
-              background: "#f43f8e",
-              borderRadius: "50%",
-              width: "18px",
-              height: "18px",
-              fontSize: "0.65rem",
-              fontWeight: "700",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "2px solid #060818",
-            }}
-          >
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </button>
-
-      {/* Notifications Dropdown */}
-      {showNotifications && (
-        <div
-          style={{
-            position: "absolute",
-            top: "44px",
-            right: 0,
-            width: "320px",
-            background: "rgba(10,6,28,0.97)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: "16px",
-            boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
-            backdropFilter: "blur(20px)",
-            zIndex: 300,
-            overflow: "hidden",
-          }}
-        >
-          {/* Header */}
-          <div
-            style={{
-              padding: "1rem 1.2rem",
-              borderBottom: "1px solid rgba(255,255,255,0.08)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <p
-              style={{
-                fontFamily: "Syne, sans-serif",
-                fontWeight: "700",
-                fontSize: "0.95rem",
-              }}
-            >
-              Notifications
-              {unreadCount > 0 && (
-                <span
-                  style={{
-                    marginLeft: "0.5rem",
-                    background: "rgba(244,63,142,0.2)",
-                    border: "1px solid rgba(244,63,142,0.3)",
-                    borderRadius: "50px",
-                    padding: "0.1rem 0.45rem",
-                    fontSize: "0.7rem",
-                    color: "#f43f8e",
-                  }}
-                >
-                  {unreadCount} new
-                </span>
-              )}
-            </p>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllAsRead}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "#a78bfa",
-                  fontSize: "0.75rem",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                }}
-              >
-                Mark all read
-              </button>
-            )}
-          </div>
-
-          {/* Notifications List */}
-          <div style={{ maxHeight: "360px", overflowY: "auto" }}>
-            {notifications.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "2.5rem 1rem" }}>
-                <p style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🔔</p>
-                <p className="text-secondary" style={{ fontSize: "0.85rem" }}>
-                  No notifications yet
-                </p>
-              </div>
-            ) : (
-              notifications.map((notif) => (
-                <div
-                  key={notif._id}
-                  onClick={() => !notif.isRead && handleMarkAsRead(notif._id)}
-                  style={{
-                    padding: "0.85rem 1.2rem",
-                    borderBottom: "1px solid rgba(255,255,255,0.05)",
-                    background: notif.isRead
-                      ? "transparent"
-                      : "rgba(108,61,211,0.08)",
-                    cursor: notif.isRead ? "default" : "pointer",
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: "0.75rem",
-                    transition: "background 0.2s",
-                  }}
-                >
-                  {/* Icon */}
-                  <div
-                    style={{
-                      width: "34px",
-                      height: "34px",
-                      borderRadius: "50%",
-                      background: notif.isRead
-                        ? "rgba(255,255,255,0.05)"
-                        : "rgba(108,61,211,0.2)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.9rem",
-                      flexShrink: 0,
-                    }}
-                  >
-                    🎵
-                  </div>
-
-                  {/* Content */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p
-                      style={{
-                        fontSize: "0.82rem",
-                        fontWeight: notif.isRead ? "400" : "600",
-                        color: notif.isRead ? "var(--text-muted)" : "#fff",
-                        lineHeight: 1.4,
-                        marginBottom: "0.25rem",
-                      }}
-                    >
-                      {notif.message}
-                    </p>
-                    <p
-                      style={{
-                        fontSize: "0.72rem",
-                        color: "var(--text-muted)",
-                      }}
-                    >
-                      {new Date(notif.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-
-                  {/* Unread dot */}
-                  {!notif.isRead && (
-                    <div
-                      style={{
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "50%",
-                        background: "#6c3dd3",
-                        flexShrink: 0,
-                        marginTop: "4px",
-                      }}
-                    />
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  const bellProps = {
+    notifications,
+    unreadCount,
+    showNotifications,
+    setShowNotifications,
+    handleMarkAsRead,
+    handleMarkAllAsRead,
+  };
 
   return (
     <>
@@ -354,15 +385,14 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Desktop User Info + Bell + Logout */}
+        {/* Desktop Right */}
         <div
           style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
           className="desktop-nav"
         >
-          {/* Bell — only for users */}
-          {user?.role === "user" && <BellIcon />}
-
-          {/* Avatar */}
+          {user?.role === "user" && (
+            <BellIcon {...bellProps} notifRef={notifRef} />
+          )}
           <div
             style={{
               width: "36px",
@@ -380,8 +410,6 @@ const Navbar = () => {
           >
             {user?.name?.charAt(0).toUpperCase()}
           </div>
-
-          {/* Name + Role */}
           <div style={{ maxWidth: "120px" }}>
             <p
               style={{
@@ -420,7 +448,6 @@ const Navbar = () => {
               {user?.role}
             </span>
           </div>
-
           <button
             className="btn-danger"
             onClick={() => setShowLogoutModal(true)}
@@ -430,13 +457,14 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile Right — Bell + Avatar + Hamburger */}
+        {/* Mobile Right */}
         <div
           style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}
           className="mobile-nav"
         >
-          {user?.role === "user" && <BellIcon />}
-
+          {user?.role === "user" && (
+            <BellIcon {...bellProps} notifRef={notifRefMobile} />
+          )}
           <div
             style={{
               width: "32px",
@@ -453,8 +481,6 @@ const Navbar = () => {
           >
             {user?.name?.charAt(0).toUpperCase()}
           </div>
-
-          {/* Hamburger */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             style={{
@@ -514,7 +540,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Dropdown Menu */}
+      {/* Mobile Dropdown */}
       {menuOpen && (
         <div
           className="glass mobile-nav"
@@ -530,7 +556,6 @@ const Navbar = () => {
             flexDirection: "column",
           }}
         >
-          {/* User Info */}
           <div
             style={{
               display: "flex",
@@ -584,8 +609,6 @@ const Navbar = () => {
               {user?.role}
             </span>
           </div>
-
-          {/* Nav Links */}
           <div
             style={{
               display: "flex",
@@ -609,7 +632,6 @@ const Navbar = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: "0.75rem",
-                transition: "all 0.2s",
               }}
               onClick={() => setMenuOpen(false)}
             >
@@ -630,7 +652,6 @@ const Navbar = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: "0.75rem",
-                transition: "all 0.2s",
               }}
               onClick={() => setMenuOpen(false)}
             >
@@ -652,7 +673,6 @@ const Navbar = () => {
                   display: "flex",
                   alignItems: "center",
                   gap: "0.75rem",
-                  transition: "all 0.2s",
                 }}
                 onClick={() => setMenuOpen(false)}
               >
@@ -660,8 +680,6 @@ const Navbar = () => {
               </Link>
             )}
           </div>
-
-          {/* Divider */}
           <div
             style={{
               height: "1px",
@@ -669,8 +687,6 @@ const Navbar = () => {
               marginBottom: "0.75rem",
             }}
           />
-
-          {/* Logout */}
           <button
             className="btn-danger"
             style={{ width: "100%", padding: "0.7rem", fontSize: "0.9rem" }}
@@ -763,7 +779,6 @@ const Navbar = () => {
       <style>{`
         .desktop-nav { display: flex !important; }
         .mobile-nav { display: none !important; }
-
         @media (max-width: 768px) {
           .desktop-nav { display: none !important; }
           .mobile-nav { display: flex !important; }
